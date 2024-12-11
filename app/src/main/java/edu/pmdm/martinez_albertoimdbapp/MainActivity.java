@@ -9,10 +9,10 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.navigation.NavigationView;
 import android.view.Menu;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -24,11 +24,14 @@ import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Picasso;
 
 import edu.pmdm.martinez_albertoimdbapp.databinding.ActivityMainBinding;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
+    private GoogleSignInClient mGoogleSignInClient;  // Añadimos GoogleSignInClient
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,15 +39,6 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null)
-                        .setAnchorView(R.id.fab).show();
-            }
-        });
 
         // Acceder al DrawerLayout y al NavigationView
         DrawerLayout drawer = binding.drawerLayout;
@@ -69,6 +63,12 @@ public class MainActivity extends AppCompatActivity {
             Picasso.get().load(user.getPhotoUrl()).into(userProfilePic);  // Usamos Picasso para cargar la foto de perfil
         }
 
+        // Configuración de GoogleSignInClient
+        mGoogleSignInClient = GoogleSignIn.getClient(this,
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .build());
+
         // Configuración del NavigationView con el DrawerLayout
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
@@ -86,10 +86,14 @@ public class MainActivity extends AppCompatActivity {
         // Cerrar sesión en Firebase
         FirebaseAuth.getInstance().signOut();
 
-        // Volver a la pantalla de inicio de sesión (WelcomeScreen)
-        Intent intent = new Intent(MainActivity.this, WelcomeScreen.class);
-        startActivity(intent);
-        finish(); // Cerrar MainActivity
+        // Cerrar sesión de Google
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, task -> {
+                    // Volver a la pantalla de inicio de sesión (LoginActivity)
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish(); // Cerrar MainActivity
+                });
     }
 
     @Override
