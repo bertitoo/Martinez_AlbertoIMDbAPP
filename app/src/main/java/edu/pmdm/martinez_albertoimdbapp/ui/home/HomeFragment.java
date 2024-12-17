@@ -1,102 +1,131 @@
 package edu.pmdm.martinez_albertoimdbapp.ui.home;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.GridLayout;
+import android.widget.ImageView;
 
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import edu.pmdm.martinez_albertoimdbapp.R;
-import edu.pmdm.martinez_albertoimdbapp.adapters.MovieAdapter;
-import edu.pmdm.martinez_albertoimdbapp.api.IMDBApiService;
-import edu.pmdm.martinez_albertoimdbapp.models.MovieResponse;
-import edu.pmdm.martinez_albertoimdbapp.models.PopularMoviesResponse;
+
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.pmdm.martinez_albertoimdbapp.MovieDetailsActivity;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import edu.pmdm.martinez_albertoimdbapp.R;
+import edu.pmdm.martinez_albertoimdbapp.api.IMDBApiService;
 
 public class HomeFragment extends Fragment {
 
-    private RecyclerView recyclerView;
-    private MovieAdapter movieAdapter;
 
-    public HomeFragment() {
+    private GridLayout gridLayout;
+    private IMDBApiService imdbApiService;
+
+
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View root = inflater.inflate(R.layout.fragment_home, container, false);
+        gridLayout = root.findViewById(R.id.gridLayout);
+        imdbApiService = new IMDBApiService();
+
+
+        loadTopMeterImages();
+        return root;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        recyclerView = view.findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+    private void loadTopMeterImages() {
+        new Thread(() -> {
+            try {
+                String response = imdbApiService.getTopMeterTitles();
+                List<String> tconstList = parseTconsts(response);
 
-        // Llamar a la API para obtener las películas populares
-        IMDBApiService apiService = IMDBApiService.getRetrofitInstance().create(IMDBApiService.class);
-        Call<PopularMoviesResponse> call = apiService.getTopMovies();
-        call.enqueue(new Callback<PopularMoviesResponse>() {
-            @Override
-            public void onResponse(Call<PopularMoviesResponse> call, Response<PopularMoviesResponse> response) {
-                if (response.isSuccessful()) {
-                    PopularMoviesResponse popularMovies = response.body();
-                    if (popularMovies != null && popularMovies.getTitles() != null) {
-                        // Mostrar un Toast con el número de películas obtenidas
-                        Toast.makeText(getContext(), "Películas obtenidas: " + popularMovies.getTitles().size(), Toast.LENGTH_SHORT).show();
 
-                        movieAdapter = new MovieAdapter(popularMovies.getTitles(), movie -> {
-                            // Al hacer clic en una película, obtenemos más detalles
-                            getMovieDetails(movie.getImdbId());
-                        });
-                        recyclerView.setAdapter(movieAdapter);
-                    } else {
-                        Toast.makeText(getContext(), "No se recibieron películas.", Toast.LENGTH_SHORT).show();
+                for (String tconst : tconstList) {
+                    String detailsResponse = imdbApiService.getTitleDetails(tconst);
+                    String imageUrl = parseImageUrl(detailsResponse);
+                    if (imageUrl != null) {
+                        requireActivity().runOnUiThread(() -> addImageToGrid(imageUrl, tconst));
                     }
-                } else {
-                    // Mostrar un Toast con el código de error si la respuesta no es exitosa
-                    Toast.makeText(getContext(), "Error en la respuesta: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
+            } catch (Exception e) {
+                Log.e("IMDB_ERROR", "Error al cargar imágenes", e);
             }
-
-            @Override
-            public void onFailure(Call<PopularMoviesResponse> call, Throwable t) {
-                // Mostrar un Toast con el mensaje de error si la solicitud falla
-                Toast.makeText(getContext(), "Error al obtener las películas: " + t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-
-        return view;
+        }).start();
     }
 
-    private void getMovieDetails(String imdbId) {
-        IMDBApiService apiService = IMDBApiService.getRetrofitInstance().create(IMDBApiService.class);
-        Call<MovieResponse> call = apiService.getMovieDetails(imdbId);
-        call.enqueue(new Callback<MovieResponse>() {
-            @Override
-            public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
-                if (response.isSuccessful()) {
-                    MovieResponse movieDetails = response.body();
-                    // Pasar los detalles a una nueva actividad
-                    Intent intent = new Intent(getContext(), MovieDetailsActivity.class);
-                    intent.putExtra("title", movieDetails.getTitle());
-                    intent.putExtra("plot", movieDetails.getPlot());
-                    intent.putExtra("releaseDate", movieDetails.getReleaseDate());
-                    intent.putExtra("rating", movieDetails.getImdbRating());
-                    intent.putExtra("poster", movieDetails.getPoster());
-                    startActivity(intent);
-                }
-            }
 
-            @Override
-            public void onFailure(Call<MovieResponse> call, Throwable t) {
-                // Manejar el error
+    private List<String> parseTconsts(String response) {
+        List<String> tconsts = new ArrayList<>();
+        String regex = "tt\\d{7,8}";
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
+        java.util.regex.Matcher matcher = pattern.matcher(response);
+        while (matcher.find() && tconsts.size() < 10) {
+            tconsts.add(matcher.group());
+        }
+        return tconsts;
+    }
+
+
+    private String parseImageUrl(String response) {
+        String regex = "https://.*?\\.jpg";
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
+        java.util.regex.Matcher matcher = pattern.matcher(response);
+        return matcher.find() ? matcher.group() : null;
+    }
+
+
+    private void addImageToGrid(String imageUrl, String tconst) {
+        ImageView imageView = new ImageView(getContext());
+        GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+        params.width = 500;
+        params.height = 750;
+        params.setMargins(16, 16, 16, 16);
+        imageView.setLayoutParams(params);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+
+        new Thread(() -> {
+            Bitmap bitmap = getBitmapFromURL(imageUrl);
+            if (bitmap != null) {
+                requireActivity().runOnUiThread(() -> imageView.setImageBitmap(bitmap));
             }
+        }).start();
+
+
+        imageView.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+            intent.putExtra("MOVIE_ID", tconst); // Pasar ID
+            intent.putExtra("IMAGE_URL", imageUrl); // Pasar imagen
+            startActivity(intent);
         });
+
+
+        gridLayout.addView(imageView);
+    }
+
+
+    private Bitmap getBitmapFromURL(String imageUrl) {
+        try {
+            URL url = new URL(imageUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            return BitmapFactory.decodeStream(input);
+        } catch (Exception e) {
+            Log.e("IMAGE_ERROR", "Error al descargar la imagen", e);
+            return null;
+        }
     }
 }

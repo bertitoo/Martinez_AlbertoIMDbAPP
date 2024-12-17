@@ -30,14 +30,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private ActivityMainBinding binding;
     private GoogleSignInClient mGoogleSignInClient;  // Añadimos GoogleSignInClient
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        edu.pmdm.martinez_albertoimdbapp.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         // Acceder al DrawerLayout y al NavigationView

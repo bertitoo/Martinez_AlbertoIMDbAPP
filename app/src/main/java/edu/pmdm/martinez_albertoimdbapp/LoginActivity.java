@@ -26,6 +26,14 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        // Verificar si ya hay un usuario logueado
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            // El usuario ya está autenticado, navegar a MainActivity
+            navigateToMainActivity();
+            return;
+        }
+
         // Configurar Google Sign-In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))  // Tu client ID de Google
@@ -79,26 +87,22 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         // Si la autenticación es exitosa, navegar a la pantalla principal
                         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        finish(); // Cerrar LoginActivity
+                        navigateToMainActivity();
                     } else {
                         // Manejar el error de autenticación
                     }
                 });
     }
 
+    private void navigateToMainActivity() {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish(); // Cerrar LoginActivity
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
-
-        // Cerrar sesión de Firebase
-        FirebaseAuth.getInstance().signOut();
-
-        // Cerrar sesión de Google
-        GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
-                .addOnCompleteListener(this, task -> {
-                    // Sesión cerrada con éxito
-                });
+        // No es necesario cerrar sesión al detener la actividad
     }
 }
