@@ -11,10 +11,8 @@ import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -28,28 +26,23 @@ import edu.pmdm.martinez_albertoimdbapp.api.IMDBApiService;
 
 public class HomeFragment extends Fragment {
 
-
     private GridLayout gridLayout;
     private IMDBApiService imdbApiService;
-
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         gridLayout = root.findViewById(R.id.gridLayout);
         imdbApiService = new IMDBApiService();
 
-
         loadTopMeterImages();
         return root;
     }
-
 
     private void loadTopMeterImages() {
         new Thread(() -> {
             try {
                 String response = imdbApiService.getTopMeterTitles();
                 List<String> tconstList = parseTconsts(response);
-
 
                 for (String tconst : tconstList) {
                     String detailsResponse = imdbApiService.getTitleDetails(tconst);
@@ -64,7 +57,6 @@ public class HomeFragment extends Fragment {
         }).start();
     }
 
-
     private List<String> parseTconsts(String response) {
         List<String> tconsts = new ArrayList<>();
         String regex = "tt\\d{7,8}";
@@ -76,14 +68,12 @@ public class HomeFragment extends Fragment {
         return tconsts;
     }
 
-
     private String parseImageUrl(String response) {
         String regex = "https://.*?\\.jpg";
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
         java.util.regex.Matcher matcher = pattern.matcher(response);
         return matcher.find() ? matcher.group() : null;
     }
-
 
     private void addImageToGrid(String imageUrl, String tconst) {
         ImageView imageView = new ImageView(getContext());
@@ -94,7 +84,6 @@ public class HomeFragment extends Fragment {
         imageView.setLayoutParams(params);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
-
         new Thread(() -> {
             Bitmap bitmap = getBitmapFromURL(imageUrl);
             if (bitmap != null) {
@@ -102,18 +91,16 @@ public class HomeFragment extends Fragment {
             }
         }).start();
 
-
+        // Pasamos el imdbId y la URL de la imagen al hacer clic
         imageView.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
-            intent.putExtra("MOVIE_ID", tconst); // Pasar ID
-            intent.putExtra("IMAGE_URL", imageUrl); // Pasar imagen
+            intent.putExtra("IMDB_ID", tconst); // Pasar IMDb ID
+            intent.putExtra("IMAGE_URL", imageUrl); // Pasar la imagen
             startActivity(intent);
         });
 
-
         gridLayout.addView(imageView);
     }
-
 
     private Bitmap getBitmapFromURL(String imageUrl) {
         try {
