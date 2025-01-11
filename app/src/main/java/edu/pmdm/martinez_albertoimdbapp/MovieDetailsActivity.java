@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,7 +19,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 
@@ -45,7 +49,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
 
-        // Referencias a las vistas de la interfaz
+        // Inicializar los elementos de la interfaz
         titleTextView = findViewById(R.id.titleTextView);
         plotTextView = findViewById(R.id.plotTextView);
         releaseDateTextView = findViewById(R.id.releaseDateTextView);
@@ -53,11 +57,11 @@ public class MovieDetailsActivity extends AppCompatActivity {
         posterImageView = findViewById(R.id.posterImageView);
         shareButton = findViewById(R.id.smsButton);
 
-        // Obtener el IMDb ID de la película del Intent
+        // Obtener el IMDb ID desde el Intent
         Intent intent = getIntent();
         imdbId = intent.getStringExtra("IMDB_ID");
 
-        // Llamar al método para obtener detalles de la película
+        // Obtener los detalles de la película
         fetchMovieDetails(imdbId);
 
         // Configurar el botón para compartir
@@ -71,7 +75,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         // Crear la solicitud
         Request request = new Request.Builder()
                 .url(url)
-                .addHeader("x-rapidapi-key", "e5efe6197emsh45e6357203aa4a1p1c3cd9jsnaaad2991ccab")
+                .addHeader("x-rapidapi-key", "9d18653146msh47b76851cde2c9dp1f671djsn6e194c109b8b")
                 .addHeader("x-rapidapi-host", "imdb-com.p.rapidapi.com")
                 .build();
 
@@ -88,62 +92,79 @@ public class MovieDetailsActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
 
-                    // Parsear la respuesta al objeto MovieResponse
-                    Gson gson = new Gson();
-                    MovieResponse movieDetailsResponse = gson.fromJson(responseBody, MovieResponse.class);
+                    // Log para depuración
+                    Log.d("IMDB_JSON_RESPONSE", "Respuesta JSON: " + responseBody);
 
-                    // Obtener los datos anidados correctamente
-                    String title = movieDetailsResponse.getData().getTitle().getTitleText().getText();
-                    String releaseYear = movieDetailsResponse.getData().getTitle().getReleaseYear().getYear();
-                    String rating = movieDetailsResponse.getData().getTitle().getRatingsSummary().getAggregateRating();
-                    String description = fetchDescription(movieDetailsResponse);
-
-                    // Generar el mensaje para compartir
-                    messageText = "Esta película te gustará: " + title + "\nRating: " + rating;
-
-                    // Actualizar la UI con los detalles de la película
-                    runOnUiThread(() -> {
-                        titleTextView.setText(title);
-                        plotTextView.setText(description);
-                        releaseDateTextView.setText("Release Year: " + releaseYear);
-                        ratingTextView.setText("Rating: " + rating);
-
-                        // Cargar la imagen del póster usando Picasso
-                        String posterUrl = movieDetailsResponse.getData().getTitle().getPrimaryImage().getUrl();
-                        Picasso.get().load(posterUrl).into(posterImageView);
-                    });
+                    // Procesar el JSON directamente
+                    runOnUiThread(() -> parseAndUpdateUI(responseBody));
                 } else {
                     runOnUiThread(() -> {
-                        Toast.makeText(MovieDetailsActivity.this, "Error al obtener detalles de la película.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MovieDetailsActivity.this, "Error al obtener los detalles de la película.", Toast.LENGTH_SHORT).show();
                     });
                 }
             }
         });
     }
 
-    private String fetchDescription(MovieResponse movieDetails) {
-        // Asegurarse de que description y value no son null antes de acceder al texto
-        if (movieDetails.getData().getDescription() != null
-                && movieDetails.getData().getDescription().getValue() != null
-                && movieDetails.getData().getDescription().getValue().getPlainText() != null) {
-            return movieDetails.getData().getDescription().getValue().getPlainText();
+    private void parseAndUpdateUI(String jsonResponse) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonResponse);
+
+            // Inicializar valores predeterminados
+            String description = "Descripción no disponible.";
+            String title = "Título no disponible.";
+            int releaseYear = 0;
+            double rating = 0.0;
+            String posterUrl = "";
+
+            // Acceder al objeto "data"
+            if (jsonObject.has("data")) {
+                JSONObject dataObject = jsonObject.getJSONObject("data");
+
+                // Título y otros detalles
+                if (dataObject.has("title")) {
+                    JSONObject titleObject = dataObject.getJSONObject("title");
+                    title = titleObject.getJSONObject("titleText").getString("text");
+                    releaseYear = titleObject.getJSONObject("releaseYear").getInt("year");
+                    rating = titleObject.getJSONObject("ratingsSummary").getDouble("aggregateRating");
+                    posterUrl = titleObject.getJSONObject("primaryImage").getString("url");
+                }
+
+                // Descripción
+                if (dataObject.has("description")) {
+                    JSONObject descriptionObject = dataObject.getJSONObject("description");
+                    if (descriptionObject.has("value")) {
+                        JSONObject valueObject = descriptionObject.getJSONObject("value");
+                        if (valueObject.has("plainText")) {
+                            description = valueObject.getString("plainText");
+                        }
+                    }
+                }
+            }
+
+            // Actualizar la interfaz
+            titleTextView.setText(title);
+            plotTextView.setText(description);
+            releaseDateTextView.setText("Año de lanzamiento: " + releaseYear);
+            ratingTextView.setText("Calificación: " + rating);
+            Picasso.get().load(posterUrl).into(posterImageView);
+
+        } catch (Exception e) {
+            Log.e("PARSE_JSON_ERROR", "Error al procesar el JSON", e);
+            Toast.makeText(this, "Error al mostrar los detalles de la película.", Toast.LENGTH_SHORT).show();
         }
-        return "Descripción no disponible."; // Valor por defecto si no hay descripción
     }
+
 
     private void shareMovieDetails() {
-        // Verificar si se tiene permiso para acceder a los contactos
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            // Si no se tiene permiso, solicitarlo
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, CONTACTS_PERMISSION_CODE);
         } else {
-            // Si ya tenemos el permiso para contactos, proceder a seleccionar el contacto
-            selectContact();
+            seleccionarContacto();
         }
     }
 
-    private void selectContact() {
-        // Intent para seleccionar un contacto
+    private void seleccionarContacto() {
         Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
         startActivityForResult(intent, CONTACTS_PERMISSION_CODE);
     }
@@ -154,9 +175,9 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
         if (requestCode == CONTACTS_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                selectContact();  // Continuar con la selección de contactos
+                seleccionarContacto();
             } else {
-                Toast.makeText(this, "Permiso de contactos denegado", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permiso para acceder a contactos denegado.", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -166,18 +187,14 @@ public class MovieDetailsActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CONTACTS_PERMISSION_CODE && resultCode == RESULT_OK) {
-            // Obtener el número de teléfono del contacto seleccionado
             Uri contactUri = data.getData();
             String[] projection = {ContactsContract.CommonDataKinds.Phone.NUMBER};
             try (Cursor cursor = getContentResolver().query(contactUri, projection, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
 
-                    // En el onActivityResult, abrir la aplicación de SMS con un selector de aplicaciones
                     Intent smsIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("sms:" + phoneNumber));
-                    smsIntent.putExtra("sms_body", messageText); // El mensaje que deseas enviar
-
-                    // Comprobar si hay alguna aplicación que pueda manejar este Intent
+                    smsIntent.putExtra("sms_body", messageText);
                     startActivity(Intent.createChooser(smsIntent, "Selecciona una aplicación de mensajería"));
                 }
             }

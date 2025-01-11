@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class IMDBApiService {
 
-    private static final String API_KEY = "e5efe6197emsh45e6357203aa4a1p1c3cd9jsnaaad2991ccab";
+    private static final String API_KEY = "9d18653146msh47b76851cde2c9dp1f671djsn6e194c109b8b";
     private static final String HOST = "imdb-com.p.rapidapi.com";
 
     // Método para obtener los títulos más populares (top meter)

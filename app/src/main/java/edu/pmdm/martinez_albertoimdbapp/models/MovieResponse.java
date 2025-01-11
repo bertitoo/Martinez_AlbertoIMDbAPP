@@ -23,8 +23,8 @@ public class MovieResponse {
     public static class Title {
         private TitleText titleText;
         private ReleaseYear releaseYear;
-        private RatingsSummary ratingsSummary;
         private PrimaryImage primaryImage;
+        private RatingsSummary ratingsSummary;
 
         public TitleText getTitleText() {
             return titleText;
@@ -34,12 +34,12 @@ public class MovieResponse {
             return releaseYear;
         }
 
-        public RatingsSummary getRatingsSummary() {
-            return ratingsSummary;
-        }
-
         public PrimaryImage getPrimaryImage() {
             return primaryImage;
+        }
+
+        public RatingsSummary getRatingsSummary() {
+            return ratingsSummary;
         }
     }
 
@@ -52,18 +52,10 @@ public class MovieResponse {
     }
 
     public static class ReleaseYear {
-        private String year;
+        private int year;
 
-        public String getYear() {
+        public int getYear() {
             return year;
-        }
-    }
-
-    public static class RatingsSummary {
-        private String aggregateRating;
-
-        public String getAggregateRating() {
-            return aggregateRating;
         }
     }
 
@@ -72,6 +64,14 @@ public class MovieResponse {
 
         public String getUrl() {
             return url;
+        }
+    }
+
+    public static class RatingsSummary {
+        private double aggregateRating;
+
+        public double getAggregateRating() {
+            return aggregateRating;
         }
     }
 
