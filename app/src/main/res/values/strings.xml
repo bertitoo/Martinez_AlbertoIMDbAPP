@@ -10,5 +10,5 @@
 
     <string name="menu_home">Top 10</string>
     <string name="menu_gallery">Favoritos</string>
-    <string name="menu_slideshow">Slideshow</string>
+    <string name="menu_slideshow">Buscar Película</string>
 </resources>

@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Configuración del NavigationView con el DrawerLayout
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_favorites, R.id.nav_slideshow)
+                R.id.nav_home, R.id.nav_favorites, R.id.nav_buscar)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);

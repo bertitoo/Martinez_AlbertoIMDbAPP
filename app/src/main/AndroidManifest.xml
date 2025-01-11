@@ -13,7 +13,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <queries>
         <package android:name="com.android.messaging" />
@@ -29,6 +28,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Martinez_AlbertoIMDbAPP"
         tools:targetApi="31">
+        <activity
+            android:name=".FilteredMoviesActivity"
+            android:exported="false" />
         <activity
             android:name=".MovieDetailsActivity"
             android:exported="false" />

@@ -23,10 +23,17 @@ public class IMDBApiService {
                 .build();
 
         Response response = client.newCall(request).execute();
-        if (response.isSuccessful()) {
-            return response.body().string();
-        } else {
-            throw new IOException("Error en la respuesta: " + response.code());
+        try {
+            if (response.isSuccessful()) {
+                return response.body().string();
+            } else {
+                throw new IOException("Error en la respuesta: " + response.code());
+            }
+        } finally {
+            // Cerrar el cuerpo de la respuesta
+            if (response.body() != null) {
+                response.body().close();
+            }
         }
     }
 
@@ -42,20 +49,17 @@ public class IMDBApiService {
                 .build();
 
         Response response = client.newCall(request).execute();
-        if (response.isSuccessful()) {
-            return response.body().string();
-        } else {
-            throw new IOException("Error en la respuesta: " + response.code());
+        try {
+            if (response.isSuccessful()) {
+                return response.body().string();
+            } else {
+                throw new IOException("Error en la respuesta: " + response.code());
+            }
+        } finally {
+            // Cerrar el cuerpo de la respuesta
+            if (response.body() != null) {
+                response.body().close();
+            }
         }
-    }
-
-    // Método para obtener la URL de la imagen (por ejemplo, del response de getTitleDetails)
-    public String parseImageUrl(String response) {
-        // Aquí deberías parsear la respuesta y extraer la URL de la imagen
-        // Este es un ejemplo de cómo se puede hacer con regex para extraer una URL
-        String regex = "https://.*?\\.jpg";
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
-        java.util.regex.Matcher matcher = pattern.matcher(response);
-        return matcher.find() ? matcher.group() : null;
     }
 }

@@ -18,8 +18,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONObject;
@@ -49,7 +47,6 @@ public class MovieDetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
 
-        // Inicializar los elementos de la interfaz
         titleTextView = findViewById(R.id.titleTextView);
         plotTextView = findViewById(R.id.plotTextView);
         releaseDateTextView = findViewById(R.id.releaseDateTextView);
@@ -57,22 +54,31 @@ public class MovieDetailsActivity extends AppCompatActivity {
         posterImageView = findViewById(R.id.posterImageView);
         shareButton = findViewById(R.id.smsButton);
 
-        // Obtener el IMDb ID desde el Intent
         Intent intent = getIntent();
         imdbId = intent.getStringExtra("IMDB_ID");
 
-        // Obtener los detalles de la película
-        fetchMovieDetails(imdbId);
+        Log.d("MOVIE_DETAILS", "ID recibido: " + imdbId); // Para verificar el ID
 
-        // Configurar el botón para compartir
+        if (imdbId != null) {
+            fetchMovieDetails(imdbId);
+        } else {
+            Toast.makeText(this, "Error: No se recibió el ID de la película.", Toast.LENGTH_SHORT).show();
+        }
+
         shareButton.setOnClickListener(v -> shareMovieDetails());
     }
 
     private void fetchMovieDetails(String imdbId) {
+        if (!imdbId.startsWith("tt")) {
+            Toast.makeText(this, "ID de película inválido: " + imdbId, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         OkHttpClient client = new OkHttpClient();
         String url = "https://imdb-com.p.rapidapi.com/title/get-overview?tconst=" + imdbId;
 
-        // Crear la solicitud
+        Log.d("MOVIE_DETAILS", "URL de detalles: " + url); // Confirmar la URL generada
+
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("x-rapidapi-key", "5a7ed5cfc0msh5ae8bfa861de4a8p1f3264jsn3d57cf64434a")
@@ -89,18 +95,25 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String responseBody = response.body().string();
-
-                    // Log para depuración
-                    Log.d("IMDB_JSON_RESPONSE", "Respuesta JSON: " + responseBody);
-
-                    // Procesar el JSON directamente
-                    runOnUiThread(() -> parseAndUpdateUI(responseBody));
-                } else {
-                    runOnUiThread(() -> {
-                        Toast.makeText(MovieDetailsActivity.this, "Error al obtener los detalles de la película.", Toast.LENGTH_SHORT).show();
-                    });
+                try {
+                    if (response.isSuccessful()) {
+                        // Leer y procesar el cuerpo de la respuesta
+                        String responseBody = response.body().string();
+                        Log.d("MOVIE_DETAILS", "Respuesta JSON: " + responseBody);
+                        runOnUiThread(() -> parseAndUpdateUI(responseBody));
+                    } else {
+                        // Manejar errores HTTP
+                        Log.e("MOVIE_DETAILS", "Error HTTP: " + response.code() + " " + response.message());
+                        runOnUiThread(() -> Toast.makeText(MovieDetailsActivity.this, "Error al obtener los detalles de la película.", Toast.LENGTH_SHORT).show());
+                    }
+                } catch (Exception e) {
+                    // Manejar excepciones
+                    Log.e("MOVIE_DETAILS", "Error al procesar la respuesta", e);
+                } finally {
+                    // Siempre cerrar el cuerpo de la respuesta
+                    if (response.body() != null) {
+                        response.body().close();
+                    }
                 }
             }
         });

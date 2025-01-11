@@ -28,9 +28,7 @@ import com.google.gson.Gson;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.pmdm.martinez_albertoimdbapp.MovieDetailsActivity;
 import edu.pmdm.martinez_albertoimdbapp.R;
@@ -106,25 +104,42 @@ public class FavoritesFragment extends Fragment {
         new Thread(() -> {
             Bitmap bitmap = getBitmapFromURL(movie.getPosterUrl());
             if (bitmap != null) {
-                requireActivity().runOnUiThread(() -> imageView.setImageBitmap(bitmap));
+                // Verifica si el fragmento está adjunto a la actividad antes de interactuar con la interfaz de usuario
+                if (isAdded() && getActivity() != null) {
+                    requireActivity().runOnUiThread(() -> imageView.setImageBitmap(bitmap));
+                } else {
+                    Log.e("FRAGMENT_ERROR", "Fragment no está adjunto a la actividad.");
+                }
             }
         }).start();
 
         imageView.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
-            intent.putExtra("IMDB_ID", movie.getImdbId());
-            Toast.makeText(getContext(), "Mostrando detalles de la película: " + movie.getTitle(), Toast.LENGTH_SHORT).show();
-            startActivity(intent);
+            if (isAdded() && getActivity() != null) {
+                Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+                intent.putExtra("IMDB_ID", movie.getImdbId());
+                Toast.makeText(requireContext(), "Mostrando detalles de la película: " + movie.getTitle(), Toast.LENGTH_SHORT).show();
+                startActivity(intent);
+            } else {
+                Log.e("FRAGMENT_ERROR", "Fragment no está adjunto a la actividad.");
+            }
         });
 
         imageView.setOnLongClickListener(v -> {
-            favoritesManager.removeFavorite(movie.getImdbId(), currentUserId);
-            Toast.makeText(getContext(), "Película eliminada de favoritos: " + movie.getTitle(), Toast.LENGTH_LONG).show();
-            loadFavorites();
+            if (isAdded() && getActivity() != null) {
+                favoritesManager.removeFavorite(movie.getImdbId(), currentUserId);
+                Toast.makeText(requireContext(), "Película eliminada de favoritos: " + movie.getTitle(), Toast.LENGTH_LONG).show();
+                loadFavorites();
+            } else {
+                Log.e("FRAGMENT_ERROR", "Fragment no está adjunto a la actividad.");
+            }
             return true;
         });
 
-        gridLayout.addView(imageView);
+        if (isAdded() && getActivity() != null) {
+            gridLayout.addView(imageView);
+        } else {
+            Log.e("FRAGMENT_ERROR", "Fragment no está adjunto a la actividad. No se agregó la vista.");
+        }
     }
 
     private Bitmap getBitmapFromURL(String imageUrl) {
@@ -162,10 +177,14 @@ public class FavoritesFragment extends Fragment {
         String json = gson.toJson(favorites);
 
         // Mostrar el JSON en un cuadro de diálogo
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Películas Favoritas en JSON")
-                .setMessage(json)
-                .setPositiveButton("Cerrar", (dialog, which) -> dialog.dismiss())
-                .show();
+        if (isAdded() && getActivity() != null) {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Películas Favoritas en JSON")
+                    .setMessage(json)
+                    .setPositiveButton("Cerrar", (dialog, which) -> dialog.dismiss())
+                    .show();
+        } else {
+            Log.e("FRAGMENT_ERROR", "Fragment no está adjunto a la actividad.");
+        }
     }
 }

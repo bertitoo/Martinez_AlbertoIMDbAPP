@@ -19,6 +19,7 @@ public class FavoritesManager {
         dbHelper = new FavoritesDatabaseHelper(context);
     }
 
+    // Verifica si una película ya está en los favoritos de un usuario
     public boolean isFavorite(String id, String userId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -37,6 +38,7 @@ public class FavoritesManager {
         return isFavorite;
     }
 
+    // Agrega una película a la lista de favoritos de un usuario
     public void addFavorite(String id, String title, String imageUrl, String userId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -48,6 +50,7 @@ public class FavoritesManager {
         db.insert(FavoritesDatabaseHelper.TABLE_FAVORITES, null, values);
         db.close();
     }
+
 
     public void removeFavorite(String id, String userId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
