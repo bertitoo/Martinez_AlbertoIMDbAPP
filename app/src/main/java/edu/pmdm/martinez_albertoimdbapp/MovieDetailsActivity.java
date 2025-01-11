@@ -75,7 +75,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         // Crear la solicitud
         Request request = new Request.Builder()
                 .url(url)
-                .addHeader("x-rapidapi-key", "9d18653146msh47b76851cde2c9dp1f671djsn6e194c109b8b")
+                .addHeader("x-rapidapi-key", "5a7ed5cfc0msh5ae8bfa861de4a8p1f3264jsn3d57cf64434a")
                 .addHeader("x-rapidapi-host", "imdb-com.p.rapidapi.com")
                 .build();
 
