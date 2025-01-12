@@ -30,12 +30,18 @@ import edu.pmdm.martinez_albertoimdbapp.database.FavoritesManager;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+/**
+ * Fragmento principal que muestra las películas más populares desde IMDb.
+ * Permite al usuario añadir películas a favoritos o ver más detalles.
+ *
+ * @author Alberto Martínez Vadillo
+ */
 public class HomeFragment extends Fragment {
 
     private GridLayout gridLayout;
     private IMDBApiService imdbApiService;
-    private Map<String, Bitmap> imageCache = new HashMap<>(); // Caché de imágenes
-    private Map<String, String> titleCache = new HashMap<>(); // Caché de títulos
+    private final Map<String, Bitmap> imageCache = new HashMap<>(); // Caché de imágenes
+    private final Map<String, String> titleCache = new HashMap<>(); // Caché de títulos
     private FavoritesManager favoritesManager;
     private String userId;
 
@@ -53,6 +59,9 @@ public class HomeFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Carga las imágenes de las películas más populares desde IMDb y las muestra en el GridLayout.
+     */
     private void loadTopMeterImages() {
         new Thread(() -> {
             try {
@@ -75,6 +84,12 @@ public class HomeFragment extends Fragment {
         }).start();
     }
 
+    /**
+     * Extrae los IDs de IMDb (tconst) de la respuesta de IMDb.
+     *
+     * @param response Respuesta en formato JSON de IMDb.
+     * @return Lista de IDs tconst.
+     */
     private List<String> parseTconsts(String response) {
         List<String> tconsts = new ArrayList<>();
         String regex = "tt\\d{7,8}";
@@ -86,6 +101,12 @@ public class HomeFragment extends Fragment {
         return tconsts;
     }
 
+    /**
+     * Extrae la URL de la imagen del póster desde la respuesta JSON.
+     *
+     * @param response Respuesta en formato JSON de IMDb.
+     * @return URL de la imagen o null si no se encuentra.
+     */
     private String parseImageUrl(String response) {
         String regex = "https://.*?\\.jpg";
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
@@ -93,6 +114,12 @@ public class HomeFragment extends Fragment {
         return matcher.find() ? matcher.group() : null;
     }
 
+    /**
+     * Extrae el título de la película desde la respuesta JSON.
+     *
+     * @param response Respuesta en formato JSON de IMDb.
+     * @return Título de la película o null si no se encuentra.
+     */
     private String parseMovieTitle(String response) {
         String regex = "\"titleText\":\\{\"text\":\"(.*?)\"";
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
@@ -100,6 +127,13 @@ public class HomeFragment extends Fragment {
         return matcher.find() ? matcher.group(1) : null;
     }
 
+    /**
+     * Añade una imagen al GridLayout.
+     *
+     * @param imageUrl   URL de la imagen del póster.
+     * @param tconst     ID de IMDb de la película.
+     * @param movieTitle Título de la película.
+     */
     private void addImageToGrid(String imageUrl, String tconst, String movieTitle) {
         ImageView imageView = new ImageView(getContext());
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
@@ -147,6 +181,12 @@ public class HomeFragment extends Fragment {
         gridLayout.addView(imageView);
     }
 
+    /**
+     * Descarga una imagen desde una URL y la devuelve como un objeto Bitmap.
+     *
+     * @param imageUrl URL de la imagen.
+     * @return Objeto Bitmap de la imagen descargada o null si ocurre un error.
+     */
     private Bitmap getBitmapFromURL(String imageUrl) {
         try {
             URL url = new URL(imageUrl);

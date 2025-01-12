@@ -82,7 +82,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
         Request detailsRequest = new Request.Builder()
                 .url(detailsUrl)
-                .addHeader("x-rapidapi-key", "5a7ed5cfc0msh5ae8bfa861de4a8p1f3264jsn3d57cf64434a")
+                .addHeader("x-rapidapi-key", "05e35edbeamsh592a5eac8032a4bp1465d3jsn99264748a40f")
                 .addHeader("x-rapidapi-host", "imdb-com.p.rapidapi.com")
                 .build();
 
@@ -118,7 +118,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
         Request plotRequest = new Request.Builder()
                 .url(plotUrl)
-                .addHeader("x-rapidapi-key", "5a7ed5cfc0msh5ae8bfa861de4a8p1f3264jsn3d57cf64434a")
+                .addHeader("x-rapidapi-key", "05e35edbeamsh592a5eac8032a4bp1465d3jsn99264748a40f")
                 .addHeader("x-rapidapi-host", "imdb-com.p.rapidapi.com")
                 .build();
 

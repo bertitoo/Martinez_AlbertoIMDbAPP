@@ -11,15 +11,33 @@ import java.util.List;
 
 import edu.pmdm.martinez_albertoimdbapp.models.Movie;
 
+/**
+ * Clase que gestiona la lógica de base de datos para las películas favoritas.
+ * Proporciona métodos para agregar, eliminar y verificar películas favoritas,
+ * así como para obtener todas las películas favoritas de un usuario.
+ *
+ * @author Alberto Martínez Vadillo
+ */
 public class FavoritesManager {
 
-    private FavoritesDatabaseHelper dbHelper;
+    private final FavoritesDatabaseHelper dbHelper;
 
+    /**
+     * Constructor que inicializa el helper de base de datos.
+     *
+     * @param context Contexto de la aplicación.
+     */
     public FavoritesManager(Context context) {
         dbHelper = new FavoritesDatabaseHelper(context);
     }
 
-    // Verifica si una película ya está en los favoritos de un usuario
+    /**
+     * Verifica si una película ya está en los favoritos de un usuario.
+     *
+     * @param id     ID de la película.
+     * @param userId ID del usuario.
+     * @return true si la película ya está en favoritos, false en caso contrario.
+     */
     public boolean isFavorite(String id, String userId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -38,7 +56,14 @@ public class FavoritesManager {
         return isFavorite;
     }
 
-    // Agrega una película a la lista de favoritos de un usuario
+    /**
+     * Agrega una película a la lista de favoritos de un usuario.
+     *
+     * @param id       ID de la película.
+     * @param title    Título de la película.
+     * @param imageUrl URL del póster de la película.
+     * @param userId   ID del usuario.
+     */
     public void addFavorite(String id, String title, String imageUrl, String userId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -51,7 +76,12 @@ public class FavoritesManager {
         db.close();
     }
 
-
+    /**
+     * Elimina una película de la lista de favoritos de un usuario.
+     *
+     * @param id     ID de la película.
+     * @param userId ID del usuario.
+     */
     public void removeFavorite(String id, String userId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.delete(FavoritesDatabaseHelper.TABLE_FAVORITES,
@@ -61,10 +91,10 @@ public class FavoritesManager {
     }
 
     /**
-     * Carga las películas favoritas de un usuario desde la base de datos.
+     * Obtiene la lista de películas favoritas de un usuario.
      *
-     * @param userId El ID del usuario autenticado.
-     * @return Una lista de objetos Movie que representan las películas favoritas.
+     * @param userId ID del usuario.
+     * @return Lista de objetos {@link Movie} que representan las películas favoritas.
      */
     public List<Movie> getFavoritesForUser(String userId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -96,5 +126,4 @@ public class FavoritesManager {
 
         return movies;
     }
-
 }

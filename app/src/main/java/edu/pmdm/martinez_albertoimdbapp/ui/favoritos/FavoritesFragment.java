@@ -35,12 +35,17 @@ import edu.pmdm.martinez_albertoimdbapp.R;
 import edu.pmdm.martinez_albertoimdbapp.database.FavoritesManager;
 import edu.pmdm.martinez_albertoimdbapp.models.Movie;
 
+/**
+ * Fragmento que muestra y gestiona las películas favoritas del usuario.
+ * Permite visualizar las películas guardadas, eliminarlas y compartir la lista en formato JSON.
+ *
+ * @author Alberto Martínez Vadillo
+ */
 public class FavoritesFragment extends Fragment {
 
     private GridLayout gridLayout;
     private FavoritesManager favoritesManager;
     private String currentUserId;
-    private Button btnShareJson;
 
     private ActivityResultLauncher<String> bluetoothPermissionLauncher;
 
@@ -49,7 +54,7 @@ public class FavoritesFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_favoritos, container, false);
 
         gridLayout = root.findViewById(R.id.gridLayout);
-        btnShareJson = root.findViewById(R.id.btnShareJson);
+        Button btnShareJson = root.findViewById(R.id.btnShareJson);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
@@ -62,7 +67,7 @@ public class FavoritesFragment extends Fragment {
         favoritesManager = new FavoritesManager(getContext());
         loadFavorites();
 
-        // Configurar el lanzador para permisos
+        // Configuración del lanzador para permisos de Bluetooth
         bluetoothPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
@@ -80,6 +85,9 @@ public class FavoritesFragment extends Fragment {
         return root;
     }
 
+    /**
+     * Carga las películas favoritas del usuario desde la base de datos y las muestra en un GridLayout.
+     */
     private void loadFavorites() {
         List<Movie> favorites = favoritesManager.getFavoritesForUser(currentUserId);
         gridLayout.removeAllViews();
@@ -92,6 +100,11 @@ public class FavoritesFragment extends Fragment {
         }
     }
 
+    /**
+     * Añade una película al GridLayout como un ImageView.
+     *
+     * @param movie Objeto Movie que representa la película a añadir.
+     */
     private void addImageToGrid(Movie movie) {
         ImageView imageView = new ImageView(getContext());
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
@@ -104,7 +117,6 @@ public class FavoritesFragment extends Fragment {
         new Thread(() -> {
             Bitmap bitmap = getBitmapFromURL(movie.getPosterUrl());
             if (bitmap != null) {
-                // Verifica si el fragmento está adjunto a la actividad antes de interactuar con la interfaz de usuario
                 if (isAdded() && getActivity() != null) {
                     requireActivity().runOnUiThread(() -> imageView.setImageBitmap(bitmap));
                 } else {
@@ -142,6 +154,12 @@ public class FavoritesFragment extends Fragment {
         }
     }
 
+    /**
+     * Descarga una imagen desde una URL y la devuelve como un objeto Bitmap.
+     *
+     * @param imageUrl URL de la imagen.
+     * @return Objeto Bitmap de la imagen descargada o null si ocurre un error.
+     */
     private Bitmap getBitmapFromURL(String imageUrl) {
         try {
             URL url = new URL(imageUrl);
@@ -156,6 +174,10 @@ public class FavoritesFragment extends Fragment {
         }
     }
 
+    /**
+     * Solicita permiso para usar Bluetooth.
+     * Si el permiso ya está concedido, muestra el cuadro de diálogo con las películas favoritas en JSON.
+     */
     private void requestBluetoothPermission() {
         if (requireContext().checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             bluetoothPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT);
@@ -164,6 +186,9 @@ public class FavoritesFragment extends Fragment {
         }
     }
 
+    /**
+     * Muestra un cuadro de diálogo con las películas favoritas del usuario en formato JSON.
+     */
     private void showFavoritesJsonDialog() {
         List<Movie> favorites = favoritesManager.getFavoritesForUser(currentUserId);
 
@@ -172,11 +197,9 @@ public class FavoritesFragment extends Fragment {
             return;
         }
 
-        // Convertir la lista de películas favoritas a JSON
         Gson gson = new Gson();
         String json = gson.toJson(favorites);
 
-        // Mostrar el JSON en un cuadro de diálogo
         if (isAdded() && getActivity() != null) {
             new AlertDialog.Builder(requireContext())
                     .setTitle("Películas Favoritas en JSON")

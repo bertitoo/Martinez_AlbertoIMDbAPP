@@ -21,18 +21,22 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.pmdm.martinez_albertoimdbapp.database.FavoritesManager;
 import edu.pmdm.martinez_albertoimdbapp.models.TMDBMovie;
 
+/**
+ * Actividad para mostrar las películas filtradas en un diseño de cuadrícula.
+ * Permite visualizar los detalles de cada película y añadirlas a favoritos.
+ *
+ * @author Alberto Martínez Vadillo
+ */
 public class FilteredMoviesActivity extends AppCompatActivity {
 
-    private GridLayout gridLayout;
-    private FavoritesManager favoritesManager;
-    private String currentUserId;
+    private GridLayout gridLayout; // Layout para mostrar las películas en cuadrícula
+    private FavoritesManager favoritesManager; // Gestión de favoritos
+    private String currentUserId; // ID del usuario autenticado
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -57,6 +61,11 @@ public class FilteredMoviesActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Muestra los resultados de las películas en el GridLayout.
+     *
+     * @param movies Lista de películas a mostrar.
+     */
     private void displayResults(List<TMDBMovie> movies) {
         gridLayout.removeAllViews();
 
@@ -70,6 +79,12 @@ public class FilteredMoviesActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Añade la imagen de una película al GridLayout.
+     * Permite mostrar detalles al hacer clic y agregar a favoritos con una pulsación larga.
+     *
+     * @param movie Objeto TMDBMovie que contiene los detalles de la película.
+     */
     private void addImageToGrid(TMDBMovie movie) {
         ImageView imageView = new ImageView(this);
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
@@ -79,6 +94,7 @@ public class FilteredMoviesActivity extends AppCompatActivity {
         imageView.setLayoutParams(params);
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
+        // Descargar y establecer la imagen del póster
         new Thread(() -> {
             try {
                 Bitmap bitmap = getBitmapFromURL(movie.getPosterPath());
@@ -90,15 +106,15 @@ public class FilteredMoviesActivity extends AppCompatActivity {
             }
         }).start();
 
-        // Acción al hacer clic: Mostrar detalles de la película
+        // Configurar clic para mostrar detalles
         imageView.setOnClickListener(v -> {
             Intent intent = new Intent(this, MovieDetailsActivity.class);
-            intent.putExtra("IMDB_ID", movie.getImdbId()); // Corrección: asegurarte que 'movie.getImdbId()' sea válido
+            intent.putExtra("IMDB_ID", movie.getImdbId()); // Pasar el ID de IMDb
             Toast.makeText(this, "Mostrando detalles de: " + movie.getTitle(), Toast.LENGTH_SHORT).show();
             startActivity(intent);
         });
 
-        // Acción al mantener presionado: Añadir a favoritos
+        // Configurar pulsación larga para agregar a favoritos
         imageView.setOnLongClickListener(v -> {
             if (currentUserId == null) {
                 Toast.makeText(this, "Por favor, inicia sesión para gestionar favoritos.", Toast.LENGTH_LONG).show();
@@ -118,6 +134,12 @@ public class FilteredMoviesActivity extends AppCompatActivity {
         gridLayout.addView(imageView);
     }
 
+    /**
+     * Descarga un bitmap desde una URL.
+     *
+     * @param imageUrl URL de la imagen a descargar.
+     * @return Bitmap de la imagen descargada o null si ocurre un error.
+     */
     private Bitmap getBitmapFromURL(String imageUrl) {
         try {
             URL url = new URL(imageUrl);

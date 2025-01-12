@@ -27,19 +27,26 @@ import edu.pmdm.martinez_albertoimdbapp.databinding.ActivityMainBinding;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 
+/**
+ * Actividad principal de la aplicación que configura el menú de navegación,
+ * el encabezado del NavigationDrawer y el manejo de la sesión de usuario.
+ *
+ * @author Alberto Martínez Vadillo
+ */
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration mAppBarConfiguration;
-    private GoogleSignInClient mGoogleSignInClient;  // Añadimos GoogleSignInClient
+    private AppBarConfiguration mAppBarConfiguration; // Configuración para el AppBar y NavigationDrawer
+    private GoogleSignInClient mGoogleSignInClient;   // Cliente para el inicio de sesión con Google
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Inflar el diseño usando View Binding
         edu.pmdm.martinez_albertoimdbapp.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Acceder al DrawerLayout y al NavigationView
+        // Configuración del NavigationDrawer y NavigationView
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
 
@@ -47,40 +54,45 @@ public class MainActivity extends AppCompatActivity {
         View headerView = navigationView.getHeaderView(0);
 
         // Referencias a los componentes del encabezado
-        TextView userName = headerView.findViewById(R.id.textView);
-        TextView userEmail = headerView.findViewById(R.id.user_email);
-        ImageView userProfilePic = headerView.findViewById(R.id.imageView);
-        Button logoutButton = headerView.findViewById(R.id.logout_button); // Obtener el botón de logout
+        TextView userName = headerView.findViewById(R.id.textView); // Nombre del usuario
+        TextView userEmail = headerView.findViewById(R.id.user_email); // Correo del usuario
+        ImageView userProfilePic = headerView.findViewById(R.id.imageView); // Foto de perfil
+        Button logoutButton = headerView.findViewById(R.id.logout_button); // Botón de cerrar sesión
 
-        // Inicializar Firebase Auth
+        // Obtener usuario autenticado de Firebase
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user != null) {
-            // Actualizar el nombre, correo y foto del perfil en el encabezado
+            // Actualizar la interfaz con los datos del usuario
             userName.setText(user.getDisplayName());
             userEmail.setText(user.getEmail());
-            Picasso.get().load(user.getPhotoUrl()).into(userProfilePic);  // Usamos Picasso para cargar la foto de perfil
+            Picasso.get().load(user.getPhotoUrl()).into(userProfilePic); // Cargar imagen de perfil usando Picasso
         }
 
-        // Configuración de GoogleSignInClient
+        // Configurar GoogleSignInClient para manejar el cierre de sesión
         mGoogleSignInClient = GoogleSignIn.getClient(this,
                 new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestEmail()
                         .build());
 
-        // Configuración del NavigationView con el DrawerLayout
+        // Configuración del NavigationDrawer con el controlador de navegación
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_favorites, R.id.nav_buscar)
-                .setOpenableLayout(drawer)
+                R.id.nav_home, R.id.nav_favorites, R.id.nav_buscar) // IDs de los fragmentos
+                .setOpenableLayout(drawer) // DrawerLayout asociado
                 .build();
+
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        // Configurar el botón de logout
+        // Configurar acción del botón de cerrar sesión
         logoutButton.setOnClickListener(v -> logout());
     }
 
+    /**
+     * Maneja el cierre de sesión del usuario, cerrando las sesiones de Firebase y Google.
+     * Redirige a la actividad de inicio de sesión.
+     */
     private void logout() {
         // Cerrar sesión en Firebase
         FirebaseAuth.getInstance().signOut();
@@ -88,22 +100,23 @@ public class MainActivity extends AppCompatActivity {
         // Cerrar sesión de Google
         mGoogleSignInClient.signOut()
                 .addOnCompleteListener(this, task -> {
-                    // Volver a la pantalla de inicio de sesión (LoginActivity)
+                    // Redirigir a LoginActivity tras cerrar sesión
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                     startActivity(intent);
-                    finish(); // Cerrar MainActivity
+                    finish(); // Finalizar MainActivity
                 });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflar el menú; añade elementos al AppBar si están presentes
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onSupportNavigateUp() {
+        // Manejar la navegación hacia arriba en el controlador de navegación
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();

@@ -1,7 +1,6 @@
 package edu.pmdm.martinez_albertoimdbapp.ui.slideshow;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,12 +34,17 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * Fragmento para buscar películas por género y año usando la API de TMDB.
+ * Permite filtrar películas y mostrar los resultados en otra actividad.
+ *
+ * @author Alberto Martínez Vadillo
+ */
 public class SearchFragment extends Fragment {
 
     private Spinner genreSpinner;
     private EditText yearEditText;
-    private Button searchButton;
-    private Map<String, String> genreMap = new HashMap<>();
+    private final Map<String, String> genreMap = new HashMap<>();
 
     private static final String TMDB_API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmOTEyOGUzMDUyMmVkOWQ3MDcyMjExYzkxNjY1NTU5MiIsIm5iZiI6MTczNjYyNDA4OS4wNDgsInN1YiI6IjY3ODJjN2Q5YmQ3OTNjMDM1NDRlNzZlNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.krzhLkfIyxWlbV7tlyUSBzCncsl5zbGA8kSFBGZx1Co";
     private static final String TMDB_GENRES_URL = "https://api.themoviedb.org/3/genre/movie/list?language=en";
@@ -55,15 +59,18 @@ public class SearchFragment extends Fragment {
 
         genreSpinner = root.findViewById(R.id.genreSpinner);
         yearEditText = root.findViewById(R.id.yearEditText);
-        searchButton = root.findViewById(R.id.searchButton);
+        Button searchButton = root.findViewById(R.id.searchButton);
 
-        // Cargar géneros y configurar botón
+        // Cargar géneros y configurar el botón de búsqueda
         loadGenres();
         searchButton.setOnClickListener(v -> performSearch());
 
         return root;
     }
 
+    /**
+     * Carga los géneros desde la API de TMDB y los muestra en un Spinner.
+     */
     private void loadGenres() {
         new Thread(() -> {
             try {
@@ -103,6 +110,11 @@ public class SearchFragment extends Fragment {
         }).start();
     }
 
+    private static final int MIN_YEAR = 1800; // Año mínimo permitido para la búsqueda
+
+    /**
+     * Realiza la búsqueda de películas basado en el género y el año seleccionado.
+     */
     private void performSearch() {
         String selectedGenre = genreSpinner.getSelectedItem().toString();
         String selectedGenreId = genreMap.get(selectedGenre);
@@ -113,6 +125,19 @@ public class SearchFragment extends Fragment {
             return;
         }
 
+        // Validar que el año sea numérico y mayor o igual al año mínimo
+        try {
+            int yearInt = Integer.parseInt(year);
+            if (yearInt < MIN_YEAR) {
+                Toast.makeText(getContext(), "Por favor, ingrese un año mayor o igual a " + MIN_YEAR + ".", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            Toast.makeText(getContext(), "El año debe ser un número válido.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Si la validación es exitosa, continuar con la búsqueda
         new Thread(() -> {
             try {
                 String url = TMDB_SEARCH_URL + "?include_adult=false&language=en-US&with_genres=" + selectedGenreId + "&year=" + year;
@@ -153,6 +178,11 @@ public class SearchFragment extends Fragment {
         }).start();
     }
 
+    /**
+     * Obtiene el `imdb_id` de una película usando su ID de TMDB.
+     *
+     * @param movie Película de la que se desea obtener el `imdb_id`.
+     */
     private void fetchImdbId(TMDBMovie movie) {
         try {
             String url = TMDB_DETAILS_URL + movie.getId() + "?language=en-US";
@@ -180,6 +210,12 @@ public class SearchFragment extends Fragment {
         }
     }
 
+    /**
+     * Parsea el JSON de respuesta para obtener la lista de películas.
+     *
+     * @param responseBody Respuesta JSON de la búsqueda.
+     * @return Lista de películas.
+     */
     private List<TMDBMovie> parseMovies(String responseBody) {
         List<TMDBMovie> movies = new ArrayList<>();
         try {

@@ -1,43 +1,72 @@
 package edu.pmdm.martinez_albertoimdbapp.models;
 
+/**
+ * Representa una película con atributos básicos como título, ID de IMDb y URL del póster.
+ *
+ * Esta clase sirve como modelo para gestionar información básica de películas
+ * dentro de la aplicación.
+ *
+ * @author Alberto Martínez Vadillo
+ */
 public class Movie {
     private String title;         // Título de la película
-    private String imdbId;        // ID de IMDb
+    private String imdbId;        // ID único de IMDb
     private String posterUrl;     // URL de la imagen del póster
 
-    // Constructor para inicializar la clase con los datos de la película
+    /**
+     * Constructor para inicializar una instancia de la clase con los datos básicos de la película.
+     *
+     * @param imdbId    ID único de IMDb de la película.
+     * @param posterUrl URL de la imagen del póster de la película.
+     */
     public Movie(String imdbId, String posterUrl) {
         this.imdbId = imdbId;
         this.posterUrl = posterUrl;
     }
 
-    // Getter para el título (aunque no lo estamos usando en este caso, podrías agregarlo si lo necesitas)
+    /**
+     * Obtiene el título de la película.
+     *
+     * @return El título de la película.
+     */
     public String getTitle() {
         return title;
     }
 
-    // Setter para el título
+    /**
+     * Establece el título de la película.
+     *
+     * @param title Título de la película.
+     */
     public void setTitle(String title) {
         this.title = title;
     }
 
-    // Getter para el IMDb ID
+    /**
+     * Obtiene el ID único de IMDb de la película.
+     *
+     * @return El ID de IMDb de la película.
+     */
     public String getImdbId() {
         return imdbId;
     }
 
-    // Setter para el IMDb ID
+    /**
+     * Establece el ID único de IMDb de la película.
+     *
+     * @param imdbId ID único de IMDb de la película.
+     */
     public void setImdbId(String imdbId) {
         this.imdbId = imdbId;
     }
 
-    // Getter para la URL del póster
+    /**
+     * Obtiene la URL del póster de la película.
+     *
+     * @return La URL de la imagen del póster.
+     */
     public String getPosterUrl() {
         return posterUrl;
     }
 
-    // Setter para la URL del póster
-    public void setPosterUrl(String posterUrl) {
-        this.posterUrl = posterUrl;
-    }
 }
