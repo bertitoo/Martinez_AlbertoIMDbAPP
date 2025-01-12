@@ -9,14 +9,9 @@ public class MovieResponse {
 
     public static class Data {
         private Title title;
-        private Description description;
 
         public Title getTitle() {
             return title;
-        }
-
-        public Description getDescription() {
-            return description;
         }
     }
 
@@ -25,6 +20,7 @@ public class MovieResponse {
         private ReleaseYear releaseYear;
         private PrimaryImage primaryImage;
         private RatingsSummary ratingsSummary;
+        private Plot plot; // Campo adicional para el plot
 
         public TitleText getTitleText() {
             return titleText;
@@ -40,6 +36,10 @@ public class MovieResponse {
 
         public RatingsSummary getRatingsSummary() {
             return ratingsSummary;
+        }
+
+        public Plot getPlot() {
+            return plot;
         }
     }
 
@@ -75,15 +75,17 @@ public class MovieResponse {
         }
     }
 
-    public static class Description {
-        private Value value;
+    // Clase para mapear el campo "plot"
+    public static class Plot {
+        private PlotText plotText;
 
-        public Value getValue() {
-            return value;
+        public PlotText getPlotText() {
+            return plotText;
         }
     }
 
-    public static class Value {
+    // Clase para mapear "plotText"
+    public static class PlotText {
         private String plainText;
 
         public String getPlainText() {

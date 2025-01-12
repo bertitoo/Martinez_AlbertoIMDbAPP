@@ -18,8 +18,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -74,18 +76,17 @@ public class MovieDetailsActivity extends AppCompatActivity {
             return;
         }
 
+        // Primera solicitud para obtener detalles básicos
         OkHttpClient client = new OkHttpClient();
-        String url = "https://imdb-com.p.rapidapi.com/title/get-overview?tconst=" + imdbId;
+        String detailsUrl = "https://imdb-com.p.rapidapi.com/title/get-overview?tconst=" + imdbId;
 
-        Log.d("MOVIE_DETAILS", "URL de detalles: " + url); // Confirmar la URL generada
-
-        Request request = new Request.Builder()
-                .url(url)
+        Request detailsRequest = new Request.Builder()
+                .url(detailsUrl)
                 .addHeader("x-rapidapi-key", "5a7ed5cfc0msh5ae8bfa861de4a8p1f3264jsn3d57cf64434a")
                 .addHeader("x-rapidapi-host", "imdb-com.p.rapidapi.com")
                 .build();
 
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(detailsRequest).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
@@ -95,69 +96,120 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                try {
-                    if (response.isSuccessful()) {
-                        // Leer y procesar el cuerpo de la respuesta
-                        String responseBody = response.body().string();
-                        Log.d("MOVIE_DETAILS", "Respuesta JSON: " + responseBody);
-                        runOnUiThread(() -> parseAndUpdateUI(responseBody));
-                    } else {
-                        // Manejar errores HTTP
-                        Log.e("MOVIE_DETAILS", "Error HTTP: " + response.code() + " " + response.message());
-                        runOnUiThread(() -> Toast.makeText(MovieDetailsActivity.this, "Error al obtener los detalles de la película.", Toast.LENGTH_SHORT).show());
-                    }
-                } catch (Exception e) {
-                    // Manejar excepciones
-                    Log.e("MOVIE_DETAILS", "Error al procesar la respuesta", e);
-                } finally {
-                    // Siempre cerrar el cuerpo de la respuesta
-                    if (response.body() != null) {
-                        response.body().close();
-                    }
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    Log.d("MOVIE_DETAILS", "Respuesta JSON: " + responseBody);
+                    runOnUiThread(() -> parseAndUpdateUI(responseBody));
+
+                    // Llamada para obtener la descripción (plot)
+                    fetchMoviePlot(imdbId);
+                } else {
+                    Log.e("MOVIE_DETAILS", "Error HTTP: " + response.code() + " " + response.message());
+                    runOnUiThread(() -> Toast.makeText(MovieDetailsActivity.this, "Error al obtener los detalles de la película.", Toast.LENGTH_SHORT).show());
                 }
             }
         });
     }
 
+    // Nueva solicitud para obtener el plot (descripción)
+    private void fetchMoviePlot(String imdbId) {
+        OkHttpClient client = new OkHttpClient();
+        String plotUrl = "https://imdb-com.p.rapidapi.com/title/get-plot?tconst=" + imdbId;
+
+        Request plotRequest = new Request.Builder()
+                .url(plotUrl)
+                .addHeader("x-rapidapi-key", "5a7ed5cfc0msh5ae8bfa861de4a8p1f3264jsn3d57cf64434a")
+                .addHeader("x-rapidapi-host", "imdb-com.p.rapidapi.com")
+                .build();
+
+        client.newCall(plotRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(MovieDetailsActivity.this, "Error al obtener la descripción: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    Log.d("MOVIE_PLOT", "Respuesta JSON (plot): " + responseBody);
+                    runOnUiThread(() -> parsePlot(responseBody));
+                } else {
+                    Log.e("MOVIE_PLOT", "Error HTTP: " + response.code() + " " + response.message());
+                    runOnUiThread(() -> Toast.makeText(MovieDetailsActivity.this, "Error al obtener la descripción de la película.", Toast.LENGTH_SHORT).show());
+                }
+            }
+        });
+    }
+
+    // Método para procesar y mostrar la descripción
+    private void parsePlot(String plotJson) {
+        try {
+            JSONObject jsonObject = new JSONObject(plotJson);
+
+            // Inicializar el plot con un valor predeterminado
+            String plot = "Descripción no disponible.";
+
+            // Verificar la estructura y extraer el texto del plot
+            if (jsonObject.has("data")) {
+                JSONObject dataObject = jsonObject.getJSONObject("data");
+                if (dataObject.has("title")) {
+                    JSONObject titleObject = dataObject.getJSONObject("title");
+                    if (titleObject.has("plot")) {
+                        JSONObject plotObject = titleObject.getJSONObject("plot");
+                        if (plotObject.has("plotText")) {
+                            JSONObject plotTextObject = plotObject.getJSONObject("plotText");
+                            if (plotTextObject.has("plainText")) {
+                                plot = plotTextObject.getString("plainText");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Actualizar el TextView con la descripción del plot
+            plotTextView.setText(plot);
+
+        } catch (Exception e) {
+            Log.e("PLOT_PARSE_ERROR", "Error al procesar el JSON del plot", e);
+            Toast.makeText(this, "Error al mostrar la descripción.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void parseAndUpdateUI(String jsonResponse) {
         try {
-            JSONObject jsonObject = new JSONObject(jsonResponse);
+            Gson gson = new Gson();
+            MovieResponse movieResponse = gson.fromJson(jsonResponse, MovieResponse.class);
 
-            // Inicializar valores predeterminados
-            String description = "Descripción no disponible.";
             String title = "Título no disponible.";
+            String plot = "Descripción no disponible.";
             int releaseYear = 0;
             double rating = 0.0;
             String posterUrl = "";
 
-            // Acceder al objeto "data"
-            if (jsonObject.has("data")) {
-                JSONObject dataObject = jsonObject.getJSONObject("data");
+            if (movieResponse.getData() != null) {
+                MovieResponse.Data data = movieResponse.getData();
 
-                // Título y otros detalles
-                if (dataObject.has("title")) {
-                    JSONObject titleObject = dataObject.getJSONObject("title");
-                    title = titleObject.getJSONObject("titleText").getString("text");
-                    releaseYear = titleObject.getJSONObject("releaseYear").getInt("year");
-                    rating = titleObject.getJSONObject("ratingsSummary").getDouble("aggregateRating");
-                    posterUrl = titleObject.getJSONObject("primaryImage").getString("url");
-                }
+                // Obtener detalles del título
+                if (data.getTitle() != null) {
+                    MovieResponse.Title titleObject = data.getTitle();
+                    title = titleObject.getTitleText() != null ? titleObject.getTitleText().getText() : title;
+                    releaseYear = titleObject.getReleaseYear() != null ? titleObject.getReleaseYear().getYear() : releaseYear;
+                    rating = titleObject.getRatingsSummary() != null ? titleObject.getRatingsSummary().getAggregateRating() : rating;
+                    posterUrl = titleObject.getPrimaryImage() != null ? titleObject.getPrimaryImage().getUrl() : posterUrl;
 
-                // Descripción
-                if (dataObject.has("description")) {
-                    JSONObject descriptionObject = dataObject.getJSONObject("description");
-                    if (descriptionObject.has("value")) {
-                        JSONObject valueObject = descriptionObject.getJSONObject("value");
-                        if (valueObject.has("plainText")) {
-                            description = valueObject.getString("plainText");
-                        }
+                    // Obtener el plot desde el objeto "plot"
+                    if (titleObject.getPlot() != null && titleObject.getPlot().getPlotText() != null) {
+                        plot = titleObject.getPlot().getPlotText().getPlainText();
                     }
                 }
             }
 
             // Actualizar la interfaz
             titleTextView.setText(title);
-            plotTextView.setText(description);
+            plotTextView.setText(plot);
             releaseDateTextView.setText("Año de lanzamiento: " + releaseYear);
             ratingTextView.setText("Calificación: " + rating);
             Picasso.get().load(posterUrl).into(posterImageView);
@@ -168,11 +220,16 @@ public class MovieDetailsActivity extends AppCompatActivity {
         }
     }
 
-
     private void shareMovieDetails() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, CONTACTS_PERMISSION_CODE);
         } else {
+            // Construir el mensaje con los detalles de la película
+            String movieTitle = titleTextView.getText().toString();
+            String movieRating = ratingTextView.getText().toString().replace("Calificación: ", ""); // Extraer solo el número del rating
+            messageText = "Esta película te gustará: " + movieTitle + " Rating: " + movieRating;
+
+            // Seleccionar el contacto
             seleccionarContacto();
         }
     }
@@ -206,10 +263,14 @@ public class MovieDetailsActivity extends AppCompatActivity {
                 if (cursor != null && cursor.moveToFirst()) {
                     phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
 
+                    // Enviar el mensaje al contacto seleccionado
                     Intent smsIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("sms:" + phoneNumber));
                     smsIntent.putExtra("sms_body", messageText);
                     startActivity(Intent.createChooser(smsIntent, "Selecciona una aplicación de mensajería"));
                 }
+            } catch (Exception e) {
+                Toast.makeText(this, "Error al seleccionar el contacto: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("CONTACT_SELECTION", "Error al obtener el número de contacto", e);
             }
         }
     }
