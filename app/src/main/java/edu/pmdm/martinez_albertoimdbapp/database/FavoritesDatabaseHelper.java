@@ -16,7 +16,7 @@ public class FavoritesDatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "favorites_db";
 
     // Versión de la base de datos
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Nombre de la tabla y columnas
     public static final String TABLE_FAVORITES = "favorites";
@@ -28,10 +28,11 @@ public class FavoritesDatabaseHelper extends SQLiteOpenHelper {
     // SQL para crear la tabla de favoritos
     private static final String CREATE_TABLE_FAVORITES =
             "CREATE TABLE " + TABLE_FAVORITES + " (" +
-                    COLUMN_ID + " TEXT PRIMARY KEY, " +
+                    COLUMN_ID + " TEXT, " +
                     COLUMN_TITLE + " TEXT, " +
                     COLUMN_IMAGE_URL + " TEXT, " +
-                    COLUMN_USER_ID + " TEXT)";
+                    COLUMN_USER_ID + " TEXT, " +
+                    "PRIMARY KEY (" + COLUMN_ID + ", " + COLUMN_USER_ID + "))";
 
     /**
      * Constructor del helper de base de datos.
