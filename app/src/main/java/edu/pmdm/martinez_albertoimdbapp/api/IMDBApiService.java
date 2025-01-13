@@ -16,7 +16,7 @@ import java.io.IOException;
 public class IMDBApiService {
 
     // Clave de la API para acceder a los servicios de IMDb
-    private static final String API_KEY = "05e35edbeamsh592a5eac8032a4bp1465d3jsn99264748a40f";
+    private static final String API_KEY = "9bd454f9f5msh0ba5340b67f82bdp1c304bjsnbcd864c2f55d";
 
     // Host requerido para las solicitudes de IMDb API
     private static final String HOST = "imdb-com.p.rapidapi.com";
