@@ -140,7 +140,7 @@ public class SearchFragment extends Fragment {
         // Si la validación es exitosa, continuar con la búsqueda
         new Thread(() -> {
             try {
-                String url = TMDB_SEARCH_URL + "?include_adult=false&language=en-US&with_genres=" + selectedGenreId + "&year=" + year;
+                String url = TMDB_SEARCH_URL + "?include_adult=false&language=en-US&with_genres=" + selectedGenreId + "&primary_release_year=" + year;
 
                 OkHttpClient client = new OkHttpClient();
                 Request request = new Request.Builder()
