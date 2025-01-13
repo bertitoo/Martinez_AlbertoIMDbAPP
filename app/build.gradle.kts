@@ -33,10 +33,14 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    packaging {
+        resources.excludes.add("META-INF/INDEX.LIST")
+        resources.excludes.add("META-INF/io.netty.versions.properties")
+    }
+
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
     implementation("com.squareup.picasso:picasso:2.71828")
@@ -45,6 +49,13 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-analytics")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.2")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.2")
+    implementation ("com.google.code.gson:gson:2.8.8")
+    implementation ("androidx.gridlayout:gridlayout:1.0.0")
     implementation(libs.material)
     implementation(libs.constraintlayout)
     implementation(libs.lifecycle.livedata.ktx)
@@ -53,6 +64,8 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.firebase.auth)
     implementation(libs.activity)
+    implementation(libs.cronet.embedded)
+    implementation(libs.gridlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

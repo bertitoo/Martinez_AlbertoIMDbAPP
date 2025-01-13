@@ -12,14 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="edu.pmdm.martinez_albertoimdbapp.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:id="@+id/nav_favorites"
+        android:name="edu.pmdm.martinez_albertoimdbapp.ui.favoritos.FavoritesFragment"
+        android:label="Favoritos"
+        tools:layout="@layout/fragment_favoritos" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="edu.pmdm.martinez_albertoimdbapp.ui.slideshow.SlideshowFragment"
+        android:id="@+id/nav_buscar"
+        android:name="edu.pmdm.martinez_albertoimdbapp.ui.slideshow.SearchFragment"
         android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        tools:layout="@layout/fragment_buscar" />
 </navigation>
