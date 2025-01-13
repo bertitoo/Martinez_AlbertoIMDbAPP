@@ -72,7 +72,8 @@ public class FavoritesManager {
         values.put(FavoritesDatabaseHelper.COLUMN_IMAGE_URL, imageUrl);
         values.put(FavoritesDatabaseHelper.COLUMN_USER_ID, userId);
 
-        db.insert(FavoritesDatabaseHelper.TABLE_FAVORITES, null, values);
+        // Usa el modo CONFLICT_REPLACE para evitar errores al insertar duplicados
+        db.insertWithOnConflict(FavoritesDatabaseHelper.TABLE_FAVORITES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
         db.close();
     }
 
